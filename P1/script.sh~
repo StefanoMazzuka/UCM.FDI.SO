@@ -1,0 +1,9 @@
+#!/bin/sh
+if test -e mytar ; then
+	echo	"tar found"
+else
+	echo 	"tar not found"
+exit 1
+fi
+
+
