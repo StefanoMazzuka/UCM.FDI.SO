@@ -23,8 +23,8 @@ copynFile(FILE * origin, FILE * destination, int nBytes)
 	*/
 	int c, cont = 0;
 
-	while ((c = getc(origin)) != EOF && cont < nBytes){
-		putc((unsigned char)c, destination);
+	while ((cont < nBytes) && ((c = getc(origin)) != EOF)){
+		putc(c, destination);
 		cont++;
 	}
 	return cont;
@@ -44,23 +44,21 @@ copynFile(FILE * origin, FILE * destination, int nBytes)
 char* 
 loadstr(FILE * file)
 {
-	int n, size = 0;
-	char* str = NULL;
-
-	//calculate the number of characters on the file name
+	char *str;
+	int i = 0, c;
+	
+	if((str = (char *)malloc(PATH_MAX * sizeof(char)))  == NULL){
+		perror("cannot allocate file name on memory");
+		return NULL;
+	}
 	do{
-		n = getc(file);
-		size++;
-	}while(n != (int) '\0' && n != EOF);
+		c = getc(file);
+		str[i]= (char)c;
+		i++;
 
-	//try to allocate
-	if(n != EOF )
-		str = (char *)malloc(size);
+	}while((c != EOF)&&((char)c != '\0'));
+	str[i] = '\0';
 
-	//Reset pointer reader to the begining of the name
-	fseek(file, -size, SEEK_CUR);
-	//read and store the file name
-	fread(str, 1, size, file)
 	return str;
 }
 
@@ -76,30 +74,31 @@ loadstr(FILE * file)
 stHeaderEntry* 
 readHeader(FILE * tarFile, int *nFiles)
 {
-	//header to return;
+	//header to return
 	stHeaderEntry* header = NULL;
+	int i,j;
 
 	//read the number of files inside the mytar file
 	fread(nFiles,sizeof (int), 1,tarFile);
 
 	//tryto alocate memory for header, NULL if fail
-	header = (stHeaderEntry *)(malloc(sizeof(stHeaderEntry)* (*nFiles));
+	header = malloc(sizeof(stHeaderEntry)* (*nFiles));
 	//control de errores
-	if(header == null){
+	if(header == NULL){
 		perror("Uopss! This mtar is too big to be alocated in memory");
 		fclose(tarFile);
 	}
 	//alocate header information
-	esle{
-		for(int i = 0; i < *nFiles; i++){
+	else{
+		for(i = 0; i < *nFiles; i++){
 			//error control
 			if((header[i].name = loadstr(tarFile)) == NULL){
-				for(int j = 0; j < i; j++)
+				for(j = 0; j < i; j++)
 					free(header[j].name);
 				fclose(tarFile);
 				return NULL;
 			}
-			fread(&header[i].size, sizeof(header[i].size), 1, tarFile);
+			fread(&header[i].size, sizeof(unsigned int), 1, tarFile);
 		}
 	}
 	return header;
@@ -129,80 +128,59 @@ readHeader(FILE * tarFile, int *nFiles)
 int
 createTar(int nFiles, char *fileNames[], char tarName[])
 {
+
 	FILE *tarFile, *in;
-	stHeaderEntry *header;
-	int headerSize = sizeof (int);
+	int i, headerSize = 0;
 
-	//files value control
-	if(nFiles <=0 || nFiles >= 1000){
-		perror("No files to tar!! or too many!!");
+	//Allocate header
+	stHeaderEntry *header = malloc(sizeof(stHeaderEntry) * nFiles );
+	if(header == NULL){
+		perror("Cannot allocate header tar file in memory");
 		return EXIT_FAILURE;
 	}
-	//Try to open
+	
+	//create tar file
 	if((tarFile = fopen(tarName, "w")) == NULL){
-		perror("Cannot open/create the tar file");
+		perror("Cannot create the tar file");
 		return EXIT_FAILURE;
 	}
-	//Try to allocate memory header for the compress method
-	if((header = malloc(sizeof(stHeaderEntry) * nFiles)) ==NULL){
-		perror("Uoopss! Cannot allocate enought memory for this tar")
-		fclose(tarFile);
-		remove(tarName);
-		return EXIT_FAILURE;
-	}
-	//Prepare header and total size
-	for(int i = 0; i < nFiles; i++){
-		//strlen(name)+1 bytes
-		int nameSpace = strlen(fileNames) + 1;
+	
+	//calculate header size in memory
+	for(i = 0; i < nFiles; i++)
+		headerSize = headerSize + strlen(fileNames[i]) + 1;
 
-		header[i].name = (char *)malloc(nameSpace);
-		//check for error
-		if(header[i].name == NULL){
-			perror("Well, this is bad, we have lost a file name");
-			fclose(tarFile);
-			remove(tarName);
-			for(int j = 0; j < i; j++)
-				free(header[j].name);
-			free(header);
-			return EXIT_FAILURE;
-		}
-		//copy the string directly from the origin
-		strcpy(header[i].name, fileNames[i]);
-		//add the extra space
-		headerSize += nameSpace + sideof (header -> size);
-	}
+	headerSize = sizeof(char) * headerSize + sizeof(int) + nFiles * sizeof(unsigned int);
 
-	//Seek the pointer from the begin of the tar file to the end of the header
+	//pointer to header end
 	fseek(tarFile, headerSize, SEEK_SET);
 
 	for(i = 0; i < nFiles; i++){
-		if((imputFile = fopen(fileNames[i], "r")) == NULL){
-			perror("Well, this is bad, we cannot open the origin file");
-			fclose(tarFile);
-			remove(tarName);
-			for(j = 0; j < i; j++)
-				free(header[j].name);
+		//allocate name file in memory
+		header[i].name = (char*) malloc(strlen(fileNames[i]) + 1);
+		//open FILE
+		if((in = fopen(fileNames[i], "r")) == NULL){
 			free(header);
+			fclose(tarFile);
 			return EXIT_FAILURE;
 		}
-		//Copy
+		//copy name file to include in the tar
+		strcpy(header[i].name, fileNames[i]);
+		//copy file data using copynFile method
 		header[i].size = copynFile(in, tarFile, INT_MAX);
-		fclose(imputFile);
+		//close FILE
+		fclose(in);
 	}
-
-	//Pointer to begin, ready to insert the header
+	//at this point is needed to move the pointer to the begining to write th header
 	rewind(tarFile);
-	//Add the first number (# of files).
-	fwrite(&nFiles, sizeof(int),  1, tarFile);
-	for(i = 0; i < nFiles; i++){
-		fwrite(header[i].name, 1, strlen(header[i].name)+1, tarFile);
-		fwrite(&header[i].size, sizeof(header[i].size), 1, tarFile);
+	//write the number of files to include in the tar
+	fwrite(&nFiles, sizeof(int), 1, tarFile);
+	//write the header information
+	for(i = 0; i < nFiles; ++i){
+		fwrite(header[i].name, sizeof(char), strlen(fileNames[i]), tarFile);
+		putc('\0', tarFile);
+		fwrite(&header[i].size, sizeof(unsigned int), 1, tarFile);
 	}
-	fprintf(stdout, "Done it\n", );
-
-	//free allocated memory
-	for(i = 0; i < nFiles, i++)
-		free(header[i].name);
+	//free memory and close FILE
 	free(header);
 	fclose(tarFile);
 
@@ -226,30 +204,30 @@ createTar(int nFiles, char *fileNames[], char tarName[])
 int
 extractTar(char tarName[])
 {
-	// Complete the function
 	stHeaderEntry *header;
 	FILE *tarFile, *output;
-	int nFiles;
+	int nFiles,i;
 
 	//open tar file
-	if((tarFile = fopen(tarName, "r")) == NULL){
+	if((tarFile = fopen(tarName, "rb")) == NULL){
 		perror("Cannot open the tar file");
 		return EXIT_FAILURE;
 	}
 
 	//create the header
-	readHeader(tarFile, &header, &nFiles);
+	header = readHeader(tarFile, &nFiles);
 	//create and write the files withthe contain information
-	for(int i = 0; i < nFiles, i++){
-		output = fopen(header[i].name, "w");
+	for(i = 0; i < nFiles; i++){
+		output = fopen(header[i].name, "wb");
 		copynFile(tarFile,output, header[i].size);
 		fclose(output);
 	}
 
-	fprintf(stdout, "Extracted\n", );
-	//liberar memoria
+	fprintf(stdout, "Extracted\n");
+	//free memory adn close FILE
 	free(header);
 	fclose(tarFile);
 
 	return EXIT_SUCCESS;
+	
 }
