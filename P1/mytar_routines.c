@@ -209,7 +209,7 @@ extractTar(char tarName[])
 	int nFiles,i;
 
 	//open tar file
-	if((tarFile = fopen(tarName, "rb")) == NULL){
+	if((tarFile = fopen(tarName, "r")) == NULL){
 		perror("Cannot open the tar file");
 		return EXIT_FAILURE;
 	}
@@ -218,7 +218,7 @@ extractTar(char tarName[])
 	header = readHeader(tarFile, &nFiles);
 	//create and write the files withthe contain information
 	for(i = 0; i < nFiles; i++){
-		output = fopen(header[i].name, "wb");
+		output = fopen(header[i].name, "w");
 		copynFile(tarFile,output, header[i].size);
 		fclose(output);
 	}
@@ -234,10 +234,54 @@ extractTar(char tarName[])
 
 /**Extract files stored in a tarball archive on the dessigned path
 *
+* On success, it returns EXIT_SUCCESS; upon error it returns EXIT_FAILURE. 
+* (macros defined in stdlib.h).
 */
-int extractTarDirectory(char* tarName,char* directory)
+int 
+extractTarDirectory(char* tarName,char* directory)
 {
-	return 0;
+
+	stHeaderEntry *header;
+	FILE *tarFile, *output;
+	int nFiles,i;
+	char *str;
+
+	str = (char *)malloc(PATH_MAX * sizeof(char));
+
+
+
+	//open tar file
+	if((tarFile = fopen(tarName, "r")) == NULL){
+		perror("Cannot open the tar file");
+		return EXIT_FAILURE;
+	}
+
+	//create the header
+	header = readHeader(tarFile, &nFiles);
+	//create and write the files withthe contain information
+	for(i = 0; i < nFiles; i++){
+
+		str = (char *)malloc(PATH_MAX * sizeof(char));
+		sprintf(str, "%s/%s", directory, header[i].name);
+
+		if((output = fopen(str, "w")) != NULL){
+		copynFile(tarFile,output, header[i].size);
+		fclose(output);
+		free(str);
+		}
+		else{
+			perror("Cannot open the tar file");
+			return EXIT_FAILURE;
+		}
+	}
+
+	fprintf(stdout, "Extracted\n");
+	//free memory adn close FILE
+	free(header);
+	fclose(tarFile);
+
+	return EXIT_SUCCESS;
+	
 }
 
 /** Show the pair information from the files cotained on the tar file
