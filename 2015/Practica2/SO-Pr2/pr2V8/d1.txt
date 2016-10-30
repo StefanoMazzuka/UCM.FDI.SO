@@ -1,0 +1,57 @@
+483,535c483
+< 	fprintf(stderr, "--->>>my_read: Vamos a leer el siguiente archivo--> %s", ruta);
+< 
+< 	// Averiguamos si nodoI asociado al archivo que queremos leer.
+< 	/*int idxNodoI, nodoI;
+< 	if( (idxNodoI = buscaPosDirectorio(&miSistemaDeFicheros, (char*)ruta+1)) == -1){
+< 		return -ENOENT;
+< 	}
+< 	nodoI = miSistemaDeFicheros.directorio.archivos[idxNodoI].idxNodoI;
+< 	EstructuraNodoI *nodo = miSistemaDeFicheros.nodosI[nodoI];*/
+< 	// Los dos procedimientos son equivalentes.
+< 	EstructuraNodoI *nodo = miSistemaDeFicheros.nodosI[fi->fh];
+< 
+< 	char buffer[TAM_BLOQUE_BYTES];
+< 	int bytesToRead = size;
+< 	int totalRead = 0;
+< 
+< 	// Leemos los datos
+< 	while(bytesToRead > 0){
+< 		int i, bloqueActual, offBloque;
+< 		bloqueActual = nodo->idxBloques[offset / TAM_BLOQUE_BYTES];
+< 		offBloque = offset % TAM_BLOQUE_BYTES;
+< 
+< 		if((lseek(miSistemaDeFicheros.fdDiscoVirtual, bloqueActual * TAM_BLOQUE_BYTES, SEEK_SET) == (off_t) - 1) ||
+< 			(read(miSistemaDeFicheros.fdDiscoVirtual, & buffer, TAM_BLOQUE_BYTES) == -1)){
+< 			perror("Falló lseek/ read in my_read");
+< 			return -EIO;
+< 		}
+< 		i = offBloque;
+< 		while((i < TAM_BLOQUE_BYTES) && (totalRead < size)){
+< 			buff[totalRead++] = buffer[i];
+< 			i++;
+< 		}
+< 		// Descontamos los leido
+< 		bytesToRead -= i;
+< 		offset += i;
+< 
+< 	}
+< 	return size;
+< }
+< 
+< struct fuse_operations myFS_operations = {
+< 	.getattr	= my_getattr,					//Obtener atributos de un fichero
+< 	.readdir	= my_readdir,					//Leer entradas del directorio
+< 	.truncate	= my_truncate,					//Modificar el tamaño de un fichero
+< 	.open		= my_open,						//Abrir un fichero
+< 	.write		= my_write,						//Escribir datos en un fichero abierto
+< 	.release	= my_release,					//Cerrar un fichero abierto
+< 	.mknod		= my_mknod,						//Crear un fichero nuevo
+< 	
+< 	// Redefinimos estas funciones para poder borrar y leer un archivo desde el sistema de fichero
+< 	.unlink     = my_unlink,                     //Borrar un fichero
+< 	.read       = my_read,                       //leer el contenido de un fichero
+< };
+---
+> 	fprintf(stderr, "--->>>my_read: Vamos a leer el
+\ No hay ningún carácter de nueva línea al final del fichero

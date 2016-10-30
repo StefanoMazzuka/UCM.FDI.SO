@@ -1,0 +1,1 @@
+cmd_/home/usuarioso/workspace/pr4-v1/Ejercicio1/hello.ko := ld -r -m elf_i386 -T /usr/src/linux-headers-2.6.32-5-common/scripts/module-common.lds --build-id -o /home/usuarioso/workspace/pr4-v1/Ejercicio1/hello.ko /home/usuarioso/workspace/pr4-v1/Ejercicio1/hello.o /home/usuarioso/workspace/pr4-v1/Ejercicio1/hello.mod.o

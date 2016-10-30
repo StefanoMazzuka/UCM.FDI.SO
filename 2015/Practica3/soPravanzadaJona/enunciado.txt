@@ -1,0 +1,6 @@
+Como parte extra de la práctica 3 se pide al alumno:
+(2 puntos) que implemente un planificador Round Robin Dinámico, en el que el cuanto sea variable, de acuerdo con los siguientes criterios:
+Si una tarea abandona la CPU porque agotó su cuanto de tiempo (slice), se reducirá su cuanto en 1 para la próxima vez que tome la CPU.
+Si una tarea abandona la CPU porque cambia a una fase de E/S sin agotar el cuanto, se aumentará su cuanto en 1 para la próxima vez que tome la CPU.
+El cuanto de tiempo debe estar siempre entre 1 y el doble del cuanto por defecto que se da a cada tarea cuando se crea.
+(2 puntos) añadir a la implementación anterior prioridades, con una sola runqueue. La inserción se hará ordenada por prioridades, de forma que al encolar una tarea se ponga al detrás de la última tarea encolada con la misma prioridad. 
