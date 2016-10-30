@@ -270,7 +270,7 @@ extractTarDirectory(char* tarName,char* directory)
 		free(str);
 		}
 		else{
-			perror("Cannot open the tar file");
+			perror("Cannot create the file inside the tar");
 			return EXIT_FAILURE;
 		}
 	}
@@ -294,7 +294,11 @@ listTar(char* tarName)
 {
 	stHeaderEntry *header;
 	FILE *tarFile;
-	int nFiles,i;
+	int nFiles,i,j;
+	unsigned int aux;
+	char *auxStr = (char *)malloc(PATH_MAX * sizeof(char));
+
+
 
 	//open tar file
 	if((tarFile = fopen(tarName, "r")) == NULL){
@@ -305,7 +309,22 @@ listTar(char* tarName)
 	//create the header
 	header = readHeader(tarFile, &nFiles);
 
-	for(i = 0; i < nFiles; i++){
+
+	for(i = 0; i < nFiles - 1; i++){
+		for(j = 0; j < nFiles - i -1; j++){
+			if(header[i].size > header[i + 1].size){
+				aux = header[i].size;
+				header[i].size = header[i+1].size;
+				header[i+1].size = aux;
+
+				auxStr = header[i].name;
+				header[i].name = header[i+1].name;
+				header[i+1].name = auxStr;
+			}
+		}
+	}
+
+	for(i = nFiles; i >= 0; --i){
 		fprintf(stdout, "[%d] File name: %s, ", i, header[i].name);
 		fprintf(stdout, "size: %u bytes \n", header[i].size);
 	}
