@@ -474,6 +474,18 @@ static int my_truncate(const char *path, off_t size)
     return 0;
 }
 
+static int my_del(const char *path, const char *file)
+{
+    int idxDir;
+    
+    fprintf(stderr, "--->>>my_del: path %s, file %s\n", path, file);
+
+    if((idxDir = findFileByName(&myFileSystem, (char *)path + 1)) == -1) {
+        return -ENOENT;
+    }
+    
+    return 0;
+}
 
 struct fuse_operations myFS_operations = {
     .getattr	= my_getattr,					// Obtain attributes from a file
@@ -483,5 +495,6 @@ struct fuse_operations myFS_operations = {
     .write		= my_write,						// Write data into a file already opened
     .release	= my_release,					// Close an opened file
     .mknod		= my_mknod,						// Create a new file
+    .del        = my_del,                       // Delete a file
 };
 
