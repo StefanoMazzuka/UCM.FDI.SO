@@ -484,7 +484,49 @@ static int my_del(const char *path, const char *file)
         return -ENOENT;
     }
     
+    idxNodoI = myFileSystem.directory.files[idxDir].nodeIdx;
+    myFileSystem.nodes[idxNodoI] = NULL;
+    updateNode(&myFileSystem, idxNodoI, myFileSystem.nodes[idxNodoI]);
+    
+    // Update root folder
+    myFileSystem.directory.files[idxDir].freeFile = false;
+    myFileSystem.directory.numFiles--;
+    myFileSystem.directory.files[idxDir].nodeIdx = NULL;
+    myFileSystem.numFreeNodes++;
+    
+    updateDirectory(&myFileSystem);
+    
     return 0;
+}
+
+static int my_read(const char *path, char *mem, size_t size, off_t offset, struct fuse_file_info *fi)
+{
+    int bytes2Read = size, totalRead = 0;
+    char buffer[BLOCK_SIZE_BYTES];
+        
+    fprintf(stderr, "--->>>my_write: path %s, size %zu, offset %jd, fh %"PRIu64"\n", path, size, (intmax_t)offset, fi->fh);
+    
+    while(bytes2Read) {
+        int i;
+        int currentBlock, offBlock;
+        currentBlock = node->blocks[offset / BLOCK_SIZE_BYTES];
+        offBlock = offset % BLOCK_SIZE_BYTES;
+
+        if(readBlock(&myFileSystem, currentBlock, &buffer) == -1) {
+            fprintf(stderr,"Error reading blocks in my_read\n");
+            return -EIO;
+        }
+
+        for(i = offBlock; (i < BLOCK_SIZE_BYTES) && (totalRead < size); i++) {
+            mem[totalRead] = buffer[i++];
+        }
+
+        // Discount the written stuff
+        bytes2Read -= (i - offBlock);
+        offset += (i - offBlock);
+    }
+    
+    return totalRead;
 }
 
 struct fuse_operations myFS_operations = {
@@ -496,5 +538,6 @@ struct fuse_operations myFS_operations = {
     .release	= my_release,					// Close an opened file
     .mknod		= my_mknod,						// Create a new file
     .del        = my_del,                       // Delete a file
+    .read       = my_read,                      // Read data from an open file 
 };
 
