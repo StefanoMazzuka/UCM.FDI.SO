@@ -503,6 +503,7 @@ static int my_read(const char *path, char *mem, size_t size, off_t offset, struc
 {
     int bytes2Read = size, totalRead = 0;
     char buffer[BLOCK_SIZE_BYTES];
+    NodeStruct *node = myFileSystem.nodes[fi->fh];
         
     fprintf(stderr, "--->>>my_write: path %s, size %zu, offset %jd, fh %"PRIu64"\n", path, size, (intmax_t)offset, fi->fh);
     
