@@ -499,6 +499,60 @@ static int my_del(const char *path, const char *file)
     return 0;
 }
 
+
+/*
+static int my_del(const char *path, const char *file)
+{
+
+    int idxNodoI, nodoI;
+    fprintf(stderr, "--->>>my_del: path %s, file %s\n", path, file);
+
+
+    if((idxNodoI = findFileByName(&myFileSystem, (char *)path + 1)) == -1) {
+        return -ENOENT;
+    }
+    nodoI = myFileSystem.directory.files[idxNodoI].nodeIdx;
+
+
+    // Actualizamos el MapaDeBits
+    int tamBloque = myFileSystem.nodes[nodoI]->numBlocks;
+
+    int i, indiceBloque;
+    for (i = 0; i < tamBloque; ++i) {
+
+        indiceBloque = myFileSystem.nodes[nodoI]->blocks[i];
+        myFileSystem.bitMap[indiceBloque] = 0;
+    }
+
+    // Actualizamos el NodoI 
+    myFileSystem.nodes[nodoI]->freeNode = true;
+    myFileSystem.nodes[nodoI]->numBlocks = 0;
+    myFileSystem.nodes[nodoI]->fileSize = 0;
+
+    // Actualizamos mi SistemaDeFicheros
+    myFileSystem.numFreeNodes++;
+
+
+    // Actualizamos el Superbloque
+    myFileSystem.superBlock.numOfFreeBlocks = myQuota(&myFileSystem);
+
+
+    // Actualizamos el Directorio
+    myFileSystem.directory.files[idxNodoI].freeFile = true;
+    myFileSystem.directory.numFiles--;
+
+
+    // Actualizamos en nuestro disco virtual, y para ello escribimos en nuestro disco-virtual
+    updateSuperBlock(&myFileSystem);
+    updateDirectory(&myFileSystem);
+    updateBitmap(&myFileSystem);
+    updateNode(&myFileSystem, nodoI, myFileSystem.nodes[nodoI]);
+    sync();
+
+    return 0;
+}
+*/
+
 static int my_read(const char *path, char *mem, size_t size, off_t offset, struct fuse_file_info *fi)
 {
     int bytes2Read = size, totalRead = 0;
@@ -538,7 +592,7 @@ struct fuse_operations myFS_operations = {
     .write		= my_write,						// Write data into a file already opened
     .release	= my_release,					// Close an opened file
     .mknod		= my_mknod,						// Create a new file
-    .unlink        = my_del,                       // Delete a file
+    .unlink     = my_del,                       // Delete a file
     .read       = my_read,                      // Read data from an open file 
 };
 
