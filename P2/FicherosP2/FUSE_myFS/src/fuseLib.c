@@ -484,7 +484,7 @@ static int my_del(const char *path, const char *file)
         return -ENOENT;
     }
     
-    idxNodoI = myFileSystem.directory.files[idxDir].nodeIdx;
+    int idxNodoI = myFileSystem.directory.files[idxDir].nodeIdx;
     myFileSystem.nodes[idxNodoI] = NULL;
     updateNode(&myFileSystem, idxNodoI, myFileSystem.nodes[idxNodoI]);
     
@@ -538,7 +538,7 @@ struct fuse_operations myFS_operations = {
     .write		= my_write,						// Write data into a file already opened
     .release	= my_release,					// Close an opened file
     .mknod		= my_mknod,						// Create a new file
-    .del        = my_del,                       // Delete a file
+    .unlink        = my_del,                       // Delete a file
     .read       = my_read,                      // Read data from an open file 
 };
 
