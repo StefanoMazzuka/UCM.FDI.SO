@@ -474,11 +474,12 @@ static int my_truncate(const char *path, off_t size)
     return 0;
 }
 
-static int my_del(const char *path, const char *file)
+/*
+static int my_unlink(const char *path, const char *file)
 {
     int idxDir;
     
-    fprintf(stderr, "--->>>my_del: path %s, file %s\n", path, file);
+    fprintf(stderr, "--->>>my_unlink: path %s, file %s\n", path, file);
 
     if((idxDir = findFileByName(&myFileSystem, (char *)path + 1)) == -1) {
         return -ENOENT;
@@ -498,14 +499,14 @@ static int my_del(const char *path, const char *file)
     
     return 0;
 }
+*/
 
 
-/*
-static int my_del(const char *path, const char *file)
+static int my_unlink(const char *path)
 {
 
     int idxNodoI, nodoI;
-    fprintf(stderr, "--->>>my_del: path %s, file %s\n", path, file);
+    fprintf(stderr, "--->>>my_del: path %s\n", path);
 
 
     if((idxNodoI = findFileByName(&myFileSystem, (char *)path + 1)) == -1) {
@@ -516,8 +517,8 @@ static int my_del(const char *path, const char *file)
 
     // Actualizamos el MapaDeBits
     int tamBloque = myFileSystem.nodes[nodoI]->numBlocks;
-
     int i, indiceBloque;
+
     for (i = 0; i < tamBloque; ++i) {
 
         indiceBloque = myFileSystem.nodes[nodoI]->blocks[i];
@@ -551,7 +552,8 @@ static int my_del(const char *path, const char *file)
 
     return 0;
 }
-*/
+
+
 
 static int my_read(const char *path, char *mem, size_t size, off_t offset, struct fuse_file_info *fi)
 {
@@ -583,7 +585,41 @@ static int my_read(const char *path, char *mem, size_t size, off_t offset, struc
     
     return totalRead;
 }
+/*
+static int my_read(const char *path, char *mem, size_t size, off_t offset, struct fuse_file_info *fi)
+{
+   fprintf(stderr, "--->>>my_write: path %s, size %zu, offset %jd, fh %"PRIu64"\n", path, size, (intmax_t)offset, fi->fh);
 
+    NodeStruct *node = myFileSystem.nodes[fi->fh];
+
+    char buffer[BLOCK_SIZE_BYTES];
+    int bytesToRead = size;
+    int totalRead = 0;
+
+    // Leemos los datos
+    while(bytesToRead > 0){
+        int i, bloqueActual, offBloque;
+        bloqueActual = node->blocks[offset / BLOCK_SIZE_BYTES];
+        offBloque = offset % BLOCK_SIZE_BYTES;
+
+        if((lseek(myFileSystem.fdVirtualDisk, bloqueActual * BLOCK_SIZE_BYTES, SEEK_SET) == (off_t) - 1) ||
+            (read(myFileSystem.fdVirtualDisk, & buffer, BLOCK_SIZE_BYTES) == -1)){
+            perror("Falló lseek/ read in my_read");
+            return -EIO;
+        }
+        i = offBloque;
+        while((i < BLOCK_SIZE_BYTES) && (totalRead < size)){
+            mem[totalRead++] = buffer[i];
+            i++;
+        }
+        // Descontamos los leido
+        bytesToRead -= i;
+        offset += i;
+
+    }
+    return size;
+}
+*/
 struct fuse_operations myFS_operations = {
     .getattr	= my_getattr,					// Obtain attributes from a file
     .readdir	= my_readdir,					// Read directory entries
@@ -592,7 +628,7 @@ struct fuse_operations myFS_operations = {
     .write		= my_write,						// Write data into a file already opened
     .release	= my_release,					// Close an opened file
     .mknod		= my_mknod,						// Create a new file
-    .unlink     = my_del,                       // Delete a file
+    .unlink     = my_unlink,                       // Delete a file
     .read       = my_read,                      // Read data from an open file 
 };
 
