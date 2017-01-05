@@ -1,0 +1,25 @@
+#!/bin/bash
+
+mkdir -p results
+
+./schedsim -i "miexample.txt" -s "PRIO"
+mv CPU_0.log /results/PRIO.log
+cd ../gantt-gplot
+./generate_gantt_chart ../schedsim/results/PRIO.log
+
+cd ../schedsim
+./schedsim -i "miexample.txt" -s "PRIO" -p
+mv CPU_0.log /results/PRIO_p.log
+cd ../gantt-gplot
+./generate_gantt_chart ../schedsim/results/PRIO_p.log
+
+
+cd ../schedsim
+./schedsim -i "miexample.txt" -s "PRIOAD" -p
+mv CPU_0.log /results/PRIOAD_p.log
+cd ../gantt-gplot
+./generate_gantt_chart ../schedsim/results/PRIOAD_p.log
+
+
+
+
