@@ -1,0 +1,20 @@
+usuarioso@debian:sudo insmod hello.ko
+
+usuarioso@debian: dmesg | tail
+[29767.941231] hello: module license 'unspecified' taints kernel.
+[29767.941236] Disabling lock debugging due to kernel taint
+[29767.953817] Hello world.
+
+
+uarioso@debian:lsmod | head
+Module                  Size  Used by
+hello                    836  0 
+
+
+usuarioso@debian:sudo rmmod hello 
+
+usuarioso@debian: dmesg | tail
+767.953817] Hello world.
+[29953.525109] Goodbye world.
+
+
