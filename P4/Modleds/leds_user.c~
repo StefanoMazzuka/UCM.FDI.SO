@@ -2,27 +2,31 @@
 #include <time.h>
 #include <fcntl.h>
 #include <signal.h>
+
+
 /*
 *	Cabecera
 */
 int menu();
 int selectSpeed();
-void contadorAs(int leds, int velocidad);
+void contadorAscendente(int leds, int velocidad);
 
 int main() {
+	int op;
 	int leds = open("/dev/leds", O_WRONLY | O_CREAT | O_TRUNC );
-	while(menu()){
-		switch(kbuf[i]) {
-			case '1':
-			    
+	while(op = menu()){
+		switch(op) {
+			case 1:
+			    contadorAscendente(leds, selectSpeed());
 			    break;
-			case '2':
-			    
+			case 2:
+			    printf("Imaginate que va al reves que la opcion 1 ;) \n");
 			    break;
 			case '\n':
 			    break;
 			default:
-			    return -EINVAL;
+				printf("Algo ha ido mal... \n");
+			    return 0;
 			}
 	}
 	close(leds);
@@ -38,7 +42,7 @@ int menu(){
 	printf("Elije una opcion: ");
 	scanf("%i", &op);
 	printf("\n==================================\n");
-	return opcion;
+	return op;
 }
 
 int selectSpeed(){
@@ -59,68 +63,89 @@ int selectSpeed(){
 		vel = 1000000;
 		printf("---> Opcion incorrecta, por defecto 1 segundo <--- \n");
 	}
-	return rap;
+	return vel;
 }
 
-void contadorAs(int leds, int velocidad){
+static const char* cnt_str[8]={
+"",
+"3",
+"2",
+"23",
+"1",
+"13",
+"12",
+"123"};
+
+
+void contadorAscendente(int leds, int velocidad){
+
+	int i=0;
+
+	for (i=0;i<8;i++){
+		write(leds,cnt_str[i],strlen(cnt_str[i]));
+		usleep(velocidad);
+	}
+
+#ifdef DIEGO
 	char buff[4];
 	int i;
-	printf("---> 0 <--- \n");
+	
+printf("0\n");
 	usleep(velocidad);
 
-	//Num1
+
 	buff[0] = '3';
-	write(leds, buff, 4);
-	printf("---> 1 <--- \n");
+	write(leds, buff, strlen(4));
+	printf("1\n");
 	usleep(velocidad);
 
-	// num2
+
 	buff[0] = '2';
 	write(leds, buff, 4);
-	printf("---> 2 <--- \n");
+	printf("2\n");
 	usleep(velocidad);
 
-	//Num3
+
 	buff[0] = '2';
 	buff[1] = '3';
 	write(leds, buff, 4);
-	printf("---> 3 <--- \n");
+	printf("3\n");
 	usleep(velocidad);
 
-	// num4
+
 	buff[0] = '1';
 	buff[1] = ' ';
 	write(leds, buff, 4);
-	printf("---> 4 <--- \n");
+	printf("4\n");
 	usleep(velocidad);
 	
-	//Num5
+
 	buff[0] = '3';
 	buff[1] = '1';
 	write(leds, buff, 4);
-	printf("---> 5 <--- \n");
+	printf("5\n");
 	usleep(velocidad);
 
-	// num6
+
 	buff[0] = '1';
 	buff[1] = '2';
 	write(leds, buff, 4);
-	printf("---> 6 <--- \n");
+	printf("6\n");
 	usleep(velocidad);
 	
-	//Num7
+
 	buff[0] = '1';
 	buff[1] = '2';
 	buff[2] = '3';
 	write(leds, buff, 4);
-	printf("---> 7 <--- \n");
+	printf("7\n");
 	usleep(velocidad);
 
-	// Apaga los numeros
 	buff[0] = ' ';
 	buff[1] = ' ';
 	buff[2] = ' ';
 	write(leds, buff, 4);
+#endif
 
 }
 

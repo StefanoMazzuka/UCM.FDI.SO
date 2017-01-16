@@ -16,17 +16,17 @@ int main() {
 	int leds = open("/dev/leds", O_WRONLY | O_CREAT | O_TRUNC );
 	while(op = menu()){
 		switch(op) {
-			case '1':
-			    contadorAs(leds, rapidez);
+			case 1:
+			    contadorAscendente(leds, selectSpeed());
 			    break;
-			case '2':
+			case 2:
 			    printf("Imaginate que va al reves que la opcion 1 ;) \n");
 			    break;
 			case '\n':
 			    break;
 			default:
 				printf("Algo ha ido mal... \n");
-			    return -EINVAL;
+			    return 0;
 			}
 	}
 	close(leds);
@@ -42,7 +42,7 @@ int menu(){
 	printf("Elije una opcion: ");
 	scanf("%i", &op);
 	printf("\n==================================\n");
-	return opcion;
+	return op;
 }
 
 int selectSpeed(){
@@ -63,18 +63,39 @@ int selectSpeed(){
 		vel = 1000000;
 		printf("---> Opcion incorrecta, por defecto 1 segundo <--- \n");
 	}
-	return rap;
+	return vel;
 }
 
+static const char* cnt_str[8]={
+"",
+"3",
+"2",
+"23",
+"1",
+"13",
+"12",
+"123"};
+
+
 void contadorAscendente(int leds, int velocidad){
+
+	int i=0;
+
+	for (i=0;i<8;i++){
+		write(leds,cnt_str[i],strlen(cnt_str[i]));
+		usleep(velocidad);
+	}
+
+#ifdef DIEGO
 	char buff[4];
 	int i;
-	printf("0\n");
+	
+printf("0\n");
 	usleep(velocidad);
 
 
 	buff[0] = '3';
-	write(leds, buff, 4);
+	write(leds, buff, strlen(4));
 	printf("1\n");
 	usleep(velocidad);
 
@@ -124,6 +145,7 @@ void contadorAscendente(int leds, int velocidad){
 	buff[1] = ' ';
 	buff[2] = ' ';
 	write(leds, buff, 4);
+#endif
 
 }
 
