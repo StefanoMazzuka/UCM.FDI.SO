@@ -62,14 +62,14 @@ struct tty_driver* kbd_driver= NULL; 	//almacena el puntero del manejador del co
 
 static int Device_Open = 0;		// Is device open? Used to prevent multiple access to device
 static char msg[BUF_LEN];		// The msg the device will give when asked
-static char *msg_Ptr;			// This will be initialized every time the device is opened successfully
-
+static int state;			// mask state of leds
+static char *msg_Ptr;			// This will be initialized every time the
 
 /* Get driver handler */
 struct tty_driver* get_kbd_driver_handler(void)
 {
-    printk(KERN_INFO "modleds: Cargado modulo de lucecitas\n");
-    printk(KERN_INFO "modleds: LA version fgconsole es %x\n", fg_console);
+    printk(KERN_INFO "lucecitas: Cargado modulo de lucecitas\n");
+    printk(KERN_INFO "lucecitas: La version fgconsole es %x\n", fg_console);
     
     //Se retorna 
 #if ( LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32) )
@@ -124,8 +124,8 @@ int init_module(void)
     major=MAJOR(start);
     minor=MINOR(start);
 
-    printk(KERN_INFO "lucecitas: Mayor number:  %d.\n", major);
-    printk(KERN_INFO "lucecitas: El driver ha generado el correspondiente fichero en /dev\n");
+    printk(KERN_INFO "lucecitas: MAYOR: %d	MINOR: %d", major, minor);
+    printk(KERN_INFO "lucecitas: generado el correspondiente fichero en /dev\n");
     printk(KERN_INFO "lucecitas: 'sudo mknod -m 666 /dev/%s c %d %d'.\n", DEVICE_NAME, major,minor);
     printk(KERN_INFO "lucecitas: Utilize 'sudo rmmod %s' para eliminar driver \n",DEVICE_NAME);
 
@@ -134,6 +134,8 @@ int init_module(void)
     
     //se iluminan todo los leds (consultar macros disponibles, aqui podria hacerse algun filigrama con bucles....)
     set_leds(kbd_driver,ALL_LEDS_ON);
+	//Se registra el estado en la variable de estado de luces
+	state = ALL_LEDS_ON;
 
     return SUCCESS;
 }
@@ -172,13 +174,16 @@ static int device_open(struct inode *inode, struct file *file)
 
     Device_Open++;
 
-    /* Initialize msg */
-    sprintf(msg, "El driver deberia haber encendido todas las luces\n");
+    // Initialize msg
+	if(state == 0x7)
+    		sprintf(msg, "ESTADO: NUM[X]  |  MAYUS[X]  |  SCROLL[X]\n");
+	if(state == 0x0)
+		sprintf(msg, "ESTADO: NUM[ ]  |  MAYUS[ ]  |  SCROLL[ ]\n");
 
-    /* Initially, this points to the beginning of the message */
+    // Initially, this points to the beginning of the message
     msg_Ptr = msg;
 
-    /* Increase the module's reference counter */
+    // Increase the module's reference counter
     try_module_get(THIS_MODULE);
 
     return SUCCESS;
@@ -258,6 +263,7 @@ static ssize_t device_read(struct file *filp,	/* see include/linux/fs.h   */
  */
 static ssize_t device_write(struct file *filp, const char *buffer, size_t length, loff_t * off)
 {
+	int i;
     /*
      * Number of bytes actually written to the buffer
      * Numeros de bytes escritos en el buffer
@@ -284,8 +290,8 @@ static ssize_t device_write(struct file *filp, const char *buffer, size_t length
      * ya que podriamos corromper el espacio de direcciones de la memoria del SO dado el nivel depermisos
      * en el que opera el Kernel...que es bastante menos restrictivo que la mayoria de niveles de uso.
      */
-    if (copy_from_user(msg_Ptr,buffer,bytes_to_write)) //esencialmente sacariamos la info contenida del msg_Ptr
-        return -EFAULT;
+    //if (copy_from_user(msg_Ptr,buffer,bytes_to_write)) //esencialmente sacariamos la info contenida del msg_Ptr
+      //  return -EFAULT;
 	/* copy_from_user() se usa en el write, este mecanismo de defensa permite retornar un
 	* Error controlado
 	*/
@@ -294,6 +300,21 @@ static ssize_t device_write(struct file *filp, const char *buffer, size_t length
      * Por seguridad reescribimos el total "real"
      */
     msg_Ptr+=bytes_to_write;
+
+	if(bytes_to_write == 1)
+		for(i=0; i < bytes_to_write; i++){
+			if(msg_Ptr[i] == '1'){
+				set_leds(kbd_driver,ONLY_NUM_LED);
+				state = ONLY_NUM_LED;
+			}
+			else if(msg_Ptr[i] == '2'){
+				set_leds(kbd_driver,ONLY_CAPS_LED);
+				state = ONLY_CAPS_LED;
+			}
+			else if(msg_Ptr[i] == '3'){
+				set_leds(kbd_driver,ONLY_SCROLL_LED);
+			}
+		}
 
     /*
      * The read operation returns the actual number of bytes
