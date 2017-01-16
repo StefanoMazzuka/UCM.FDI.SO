@@ -28,7 +28,7 @@ struct tty_driver* kbd_driver= NULL;
 struct tty_driver* get_kbd_driver_handler(void)
 {
     printk(KERN_INFO "modleds: Cargado modulo de lucecitas\n");
-    printk(KERN_INFO "modleds: LA version fgconsole es %x\n", fg_console);
+    printk(KERN_INFO "modleds: La version fgconsole es %x\n", fg_console);
     
     //Se retorna 
 #if ( LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32) )

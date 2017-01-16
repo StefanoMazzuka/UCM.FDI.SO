@@ -14,7 +14,6 @@
 #define ONLY_CAPS_LED 0x4
 #define ONLY_NUM_LED 0x2
 #define ONLY_SCROLL_LED 0x1
-//Versiones combiandas de led, ¿se usa la mascara en modo AND o como va esto?
 #define SCROLL_NUM_LED 0x3
 #define SCROLL_CAPS_LED 0x5
 #define NUM_CAPS_LED 0x6

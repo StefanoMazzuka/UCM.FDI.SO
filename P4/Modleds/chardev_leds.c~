@@ -59,6 +59,7 @@ static ssize_t device_write(struct file *, const char *, size_t, loff_t *);
 dev_t start;				//Mascara de 32 bits (12 bits MAYOR number y 20 MINOR number)
 struct cdev* LEDS=NULL;
 struct tty_driver* kbd_driver= NULL; 	//almacena el puntero del manejador del controlador
+
 static int Device_Open = 0;		// Is device open? Used to prevent multiple access to device
 static char msg[BUF_LEN];		// The msg the device will give when asked
 static char *msg_Ptr;			// This will be initialized every time the device is opened successfully
@@ -79,7 +80,7 @@ struct tty_driver* get_kbd_driver_handler(void)
 }
 
 				 
-//Interzaf de funciiones del dispositivo
+//Interzaf de funciones del dispositivo
 static struct file_operations fops = {
     .read = device_read,
     .write = device_write,
@@ -123,11 +124,10 @@ int init_module(void)
     major=MAJOR(start);
     minor=MINOR(start);
 
-    printk(KERN_INFO "I was assigned major number %d. To talk to\n", major);
-    printk(KERN_INFO "the driver, create a dev file with\n");
-    printk(KERN_INFO "'sudo mknod -m 666 /dev/%s c %d %d'.\n", DEVICE_NAME, major,minor);
-    printk(KERN_INFO "Try to cat and echo to the device file.\n");
-    printk(KERN_INFO "Remove the device file and module when done.\n");
+    printk(KERN_INFO "lucecitas: Mayor number:  %d.\n", major);
+    printk(KERN_INFO "lucecitas: El driver ha generado el correspondiente fichero en /dev\n");
+    printk(KERN_INFO "lucecitas: 'sudo mknod -m 666 /dev/%s c %d %d'.\n", DEVICE_NAME, major,minor);
+    printk(KERN_INFO "lucecitas: Utilize 'sudo rmmod %s' para eliminar driver \n",DEVICE_NAME);
 
     //kbb_driver almacena el manejador del controlador del dispositvo del teclado
     kbd_driver= get_kbd_driver_handler();
